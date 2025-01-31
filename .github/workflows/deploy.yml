@@ -1,0 +1,72 @@
+name: PushNDeploy to Mikr.us
+
+on:
+  push:
+    branches:
+      - master  # Wdrażaj tylko po pushu do master
+
+jobs:
+  pushndeploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pobranie kodu
+        uses: actions/checkout@v3
+
+      - name: Ustawienie danych uwierzytelniających Git
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git config --global credential.helper store
+          echo "https://${{ secrets.GITHUB_TOKEN }}@github.com" > ~/.git-credentials
+
+      - name: Połączenie przez SSH i wdrożenie na VPS
+        run: |
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+            echo ">>> PushNDeploy: Tworzę główny katalog, jeśli nie istnieje"
+            mkdir -p /var/www/PushNDeploy
+            cd /var/www/PushNDeploy
+
+            echo ">>> PushNDeploy: Klonowanie repozytorium, jeśli go nie ma"
+            if [ ! -d "PushNDeploy" ]; then
+              git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO.git PushNDeploy
+            fi
+
+            echo ">>> PushNDeploy: Pobieram najnowsze zmiany"
+            cd PushNDeploy
+            git pull origin master
+
+            echo ">>> PushNDeploy: Buduję aplikację Blazor Server"
+            dotnet publish PushNDeploy.csproj -c Release -o /var/www/PushNDeploy/publish
+
+            echo ">>> PushNDeploy: Sprawdzam, czy usługa systemd istnieje"
+            if ! systemctl list-units --full -all | grep -q "pushndeploy.service"; then
+              echo ">>> PushNDeploy: Tworzę usługę pushndeploy"
+              sudo bash -c 'cat > /etc/systemd/system/pushndeploy.service << EOL
+[Unit]
+Description=PushNDeploy Blazor Server App
+After=network.target
+
+[Service]
+WorkingDirectory=/var/www/PushNDeploy/publish
+ExecStart=/usr/bin/dotnet /var/www/PushNDeploy/publish/PushNDeploy.dll
+Restart=always
+User=root
+Group=root
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_RUNNING_IN_CONTAINER=false
+
+[Install]
+WantedBy=multi-user.target
+EOL'
+              sudo systemctl daemon-reload
+              sudo systemctl enable pushndeploy
+            fi
+
+            echo ">>> PushNDeploy: Restartuję usługę pushndeploy"
+            sudo systemctl restart pushndeploy
+
+            echo ">>> PushNDeploy: Sprawdzam status usługi"
+            sudo systemctl status pushndeploy --no-pager
+          EOF
