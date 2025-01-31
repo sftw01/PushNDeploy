@@ -31,8 +31,7 @@ jobs:
             cd PushNDeploy
             git pull origin master
 
-            echo ">>> PushNDeploy: Tworzę katalog publish, jeśli nie istnieje"
-            mkdir -p /var/www/PushNDeploy/publish
+
 
             echo ">>> PushNDeploy: Buduję aplikację Blazor Server"
             dotnet publish PushNDeploy.csproj -c Release -o /var/www/PushNDeploy/publish
