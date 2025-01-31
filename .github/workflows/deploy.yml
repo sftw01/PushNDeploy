@@ -3,7 +3,7 @@ name: PushNDeploy to Mikr.us
 on:
   push:
     branches:
-      - master  # Wdrażaj tylko po pushu do master
+      - master  # Wdrażaj tylko po pushu do master new
 
 jobs:
   pushndeploy:
@@ -27,14 +27,12 @@ jobs:
             mkdir -p /var/www/PushNDeploy
             cd /var/www/PushNDeploy
 
-            echo ">>> PushNDeploy: Klonowanie repozytorium, jeśli go nie ma"
-            if [ ! -d "PushNDeploy" ]; then
-              git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO.git PushNDeploy
-            fi
-
             echo ">>> PushNDeploy: Pobieram najnowsze zmiany"
             cd PushNDeploy
             git pull origin master
+
+            echo ">>> PushNDeploy: Tworzę katalog publish, jeśli nie istnieje"
+            mkdir -p /var/www/PushNDeploy/publish
 
             echo ">>> PushNDeploy: Buduję aplikację Blazor Server"
             dotnet publish PushNDeploy.csproj -c Release -o /var/www/PushNDeploy/publish
