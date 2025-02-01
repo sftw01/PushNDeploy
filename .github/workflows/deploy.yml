@@ -36,27 +36,7 @@ jobs:
             echo ">>> PushNDeploy: Buduję aplikację Blazor Server"
             dotnet publish PushNDeploy.csproj -c Release -o /var/www/PushNDeploy/publish
 
-            echo ">>> PushNDeploy: Sprawdzam, czy usługa systemd istnieje"
-            if ! systemctl list-units --full -all | grep -q "pushndeploy.service"; then
-              echo ">>> PushNDeploy: Tworzę usługę pushndeploy"
-              sudo bash nano /etc/systemd/system/pushndeploy.service << EOL
-[Unit]
-Description=PushNDeploy Blazor Server App
-After=network.target
 
-[Service]
-WorkingDirectory=/var/www/PushNDeploy/publish
-ExecStart=/usr/bin/dotnet /var/www/PushNDeploy/publish/PushNDeploy.dll
-Restart=always
-User=root
-Group=root
-Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
-Environment=ASPNETCORE_ENVIRONMENT=Production
-Environment=DOTNET_RUNNING_IN_CONTAINER=false
-
-[Install]
-WantedBy=multi-user.target
-EOL'
               sudo systemctl daemon-reload
               sudo systemctl enable pushndeploy
             fi
