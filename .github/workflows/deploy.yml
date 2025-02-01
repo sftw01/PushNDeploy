@@ -39,7 +39,7 @@ jobs:
 
               sudo systemctl daemon-reload
               sudo systemctl enable pushndeploy
-            fi
+            
 
             echo ">>> PushNDeploy: Restartuję usługę pushndeploy"
             sudo systemctl restart pushndeploy
