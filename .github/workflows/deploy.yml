@@ -20,7 +20,7 @@ jobs:
           git config --global credential.helper store
           echo "https://${{ secrets.GITHUB_TOKEN }}@github.com" > ~/.git-credentials
 
-      - name: Połączenie przez SSH i wdrożenie na VPS
+      - name: Połączenie przez SSH i pobranie repo
         run: |
           sshpass -p "${{ secrets.VPS_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             echo ">>> PushNDeploy: Tworzę główny katalog, jeśli nie istnieje"
