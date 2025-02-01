@@ -34,7 +34,7 @@ jobs:
 
 
             echo ">>> PushNDeploy: Buduję aplikację Blazor Server"
-            dotnet publish PushNDeploy.csproj -c Release -o /var/www/PushNDeploy/publish
+            dotnet publish PushNDeploy.csproj -c Release -o /var/www/publishPushNDeploy/
 
 
               sudo systemctl daemon-reload
